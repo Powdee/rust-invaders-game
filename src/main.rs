@@ -5,9 +5,9 @@ use invaders::{
     render,
 };
 use rusty_audio::Audio;
-use std::error::Error;
 use std::sync::mpsc;
 use std::time::Duration;
+use std::{error::Error, time::Instant};
 
 use crossterm::{event, terminal};
 use std::{io, thread};
@@ -56,8 +56,12 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     // game loop
     let mut player = Player::new();
+    let mut instant = Instant::now();
+
     'gameloop: loop {
         // per frame init
+        let delta = instant.elapsed();
+        instant = Instant::now();
         let mut curr_frame = new_frame();
 
         // input
@@ -66,6 +70,11 @@ fn main() -> Result<(), Box<dyn Error>> {
                 match key_event.code {
                     KeyCode::Left => player.move_left(),
                     KeyCode::Right => player.move_right(),
+                    KeyCode::Char(' ') | KeyCode::Enter => {
+                        if player.shoot() {
+                            audio.play("pew");
+                        }
+                    }
                     // escape button will perform audio from lose track
                     KeyCode::Esc | KeyCode::Char('q') => {
                         audio.play("lose");
@@ -76,6 +85,9 @@ fn main() -> Result<(), Box<dyn Error>> {
                 }
             }
         }
+
+        //update
+        player.update(delta);
 
         // draw and render
         frame::Drawable::draw(&player, &mut curr_frame);

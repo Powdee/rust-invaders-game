@@ -2,6 +2,8 @@ use std::time::Duration;
 
 use rusty_time::prelude::Timer;
 
+use crate::frame::{Drawable, Frame};
+
 pub struct Shot {
     pub x: usize,
     pub y: usize,
@@ -32,5 +34,15 @@ impl Shot {
     pub fn explode(&mut self) {
         self.exploding = true;
         self.timer = Timer::from_millis(250);
+    }
+
+    pub fn dead(&self) -> bool {
+        return (self.exploding && self.timer.ready) || (self.y == 0);
+    }
+}
+
+impl Drawable for Shot {
+    fn draw(&self, frame: &mut Frame) {
+        frame[self.x][self.y] = if self.exploding { "*" } else { "|" };
     }
 }
